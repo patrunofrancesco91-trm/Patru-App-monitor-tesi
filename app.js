@@ -1,6 +1,6 @@
 const cfg=window.APP_CONFIG||{};
 const $=s=>document.querySelector(s);
-const authView=$('#authView'),appView=$('#appView'),view=$('#view'),tabs=$('#tabs'),headerUser=$('#headerUser');
+const authView=$('#authView'),passwordSetupView=$('#passwordSetupView'),appView=$('#appView'),view=$('#view'),tabs=$('#tabs'),headerUser=$('#headerUser');
 let currentUser=null,profile=null,participantProfile=null,activeTab='home';
 const staffRoles=['owner','researcher'];
 const staffTabs=['home','participants','wellness','training','tests','history','report','settings'];
@@ -13,6 +13,36 @@ const fmtDate=d=>d?new Date(d+'T12:00:00').toLocaleDateString('it-IT'):'';
 const stat=(l,v)=>`<div class="stat"><span>${esc(l)}</span><b>${esc(v)}</b></div>`;
 const toast=t=>{const x=$('#toast');x.textContent=t;x.classList.remove('hidden');setTimeout(()=>x.classList.add('hidden'),2600)};
 const isStaff=()=>staffRoles.includes(profile?.role);
+
+
+// Primo accesso da invito/reset password.
+// Supabase può restituire token nell'hash oppure un code PKCE nella query.
+const initialUrl = new URL(window.location.href);
+const initialHash = new URLSearchParams(initialUrl.hash.replace(/^#/,''));
+const inviteContext = ['invite','recovery'].includes(initialHash.get('type')||initialUrl.searchParams.get('type')||'')
+  || initialHash.has('access_token')
+  || initialUrl.searchParams.has('code');
+let awaitingPasswordSetup = inviteContext;
+
+function appBaseUrl(){
+  // Fondamentale per GitHub Pages: conserva /nome-repository/ e non solo location.origin.
+  return new URL('./', window.location.href).href;
+}
+
+function showPasswordSetup(message=''){
+  authView?.classList.add('hidden');
+  appView?.classList.add('hidden');
+  passwordSetupView?.classList.remove('hidden');
+  const m=$('#passwordMsg'); if(m)m.textContent=message;
+}
+function clearAuthCallbackUrl(){
+  try{ history.replaceState({},document.title,appBaseUrl()); }catch(_e){}
+}
+async function finishFirstAccess(session){
+  if(!session?.user) return false;
+  showPasswordSetup('Invito verificato. Scegli ora la tua password personale.');
+  return true;
+}
 
 let sb=null;
 try{
@@ -99,9 +129,46 @@ async function restore(){
   try{
     const {data,error}=await sb.auth.getSession();
     if(error) throw error;
-    if(data?.session?.user) await boot(data.session.user);
+    if(data?.session?.user){ if(awaitingPasswordSetup) await finishFirstAccess(data.session); else await boot(data.session.user); }
   }catch(e){console.error('Restore session',e)}
 }
+
+if(sb){
+  sb.auth.onAuthStateChange(async (event,session)=>{
+    if((awaitingPasswordSetup || event==='PASSWORD_RECOVERY') && session?.user){
+      awaitingPasswordSetup=true;
+      await finishFirstAccess(session);
+    }
+  });
+}
+
+$('#passwordSetupForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const p1=$('#newPassword').value;
+  const p2=$('#confirmPassword').value;
+  const m=$('#passwordMsg');
+  if(p1.length<8){m.textContent='La password deve contenere almeno 8 caratteri.';return;}
+  if(p1!==p2){m.textContent='Le due password non coincidono.';return;}
+  $('#setPasswordBtn').disabled=true;
+  m.textContent='Salvataggio password…';
+  try{
+    const {data,error}=await sb.auth.updateUser({password:p1});
+    if(error) throw error;
+    awaitingPasswordSetup=false;
+    clearAuthCallbackUrl();
+    passwordSetupView.classList.add('hidden');
+    m.textContent='Password impostata.';
+    if(data?.user) await boot(data.user);
+    else {
+      const {data:sess}=await sb.auth.getSession();
+      if(sess?.session?.user) await boot(sess.session.user);
+      else showAuth('Password impostata. Accedi con email e nuova password.');
+    }
+  }catch(err){
+    m.textContent='Impossibile impostare la password: '+(err?.message||String(err));
+  }finally{$('#setPasswordBtn').disabled=false;}
+});
+
 setTimeout(restore,0);
 function renderTabs(){const arr=isStaff()?staffTabs:participantTabs;tabs.innerHTML=arr.map(t=>`<button class="tabBtn ${activeTab===t?'active':''}" data-tab="${t}">${labels[t]}</button>`).join('');tabs.querySelectorAll('button').forEach(b=>b.onclick=async()=>{activeTab=b.dataset.tab;renderTabs();await render()})}
 async function render(){const fn={home:renderHome,participants:renderParticipants,wellness:renderWellness,training:renderTraining,tests:renderTests,history:renderHistory,report:renderReport,settings:renderSettings}[activeTab];await fn()}
@@ -148,7 +215,7 @@ async function openParticipantEditor(pid,ids,anth){const p=(await sb.from('parti
   if(!email)return toast('Inserisci email');
   $('#inviteBtn').disabled=true;
   try{
-    const {data,error}=await sb.functions.invoke('invite-participant',{body:{participant_id:pid,email,redirect_to:location.origin}});
+    const {data,error}=await sb.functions.invoke('invite-participant',{body:{participant_id:pid,email,redirect_to:appBaseUrl()}});
     if(error){
       let detail=error.message||'Errore invito';
       try{

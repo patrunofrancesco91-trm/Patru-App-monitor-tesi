@@ -9,12 +9,12 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
-  <script src="config.js?v=2.0"></script>
+  <script src="config.js?v=3.0"></script>
 </head>
 <body>
   <header class="topbar">
     <div>
-      <h1>Patruno Monitor — Tesi <small style="font-size:.45em;opacity:.7">VERSIONE DEFINITIVA</small></h1>
+      <h1>Patruno Monitor — Tesi <small style="font-size:.45em;opacity:.7">VERSIONE DEFINITIVA · ACCESSO PERSONALE</small></h1>
       <p>HIIT + Forza · 14 settimane</p>
     </div>
     <div id="headerUser" class="headerUser hidden"></div>
@@ -32,12 +32,24 @@
         <p id="authMsg" class="msg"></p>
       </div>
     </section>
+    <section id="passwordSetupView" class="authWrap hidden">
+      <div class="card authCard">
+        <h2>Imposta la tua password</h2>
+        <p class="muted">Primo accesso Patruno Monitor — Tesi. Scegli una password personale per i prossimi accessi.</p>
+        <form id="passwordSetupForm">
+          <label>Nuova password<input id="newPassword" type="password" minlength="8" required autocomplete="new-password"></label>
+          <label>Conferma password<input id="confirmPassword" type="password" minlength="8" required autocomplete="new-password"></label>
+          <button class="primary full" id="setPasswordBtn" type="submit">Imposta password e accedi</button>
+        </form>
+        <p id="passwordMsg" class="msg"></p>
+      </div>
+    </section>
     <section id="appView" class="hidden">
       <nav id="tabs" class="tabs"></nav>
       <section id="view"></section>
     </section>
   </main>
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=2.0"></script>
+  <script src="app.js?v=3.0"></script>
 </body>
 </html>
