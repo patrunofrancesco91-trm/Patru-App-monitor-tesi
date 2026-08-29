@@ -1,0 +1,9 @@
+{
+  "name": "Patruno Monitor — Tesi",
+  "short_name": "Patruno Tesi",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b3a6e",
+  "icons": []
+}

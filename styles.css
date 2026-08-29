@@ -1,0 +1,111 @@
+
+:root{
+  --primary:#c8102e;--primary2:#8f001c;--accent:#e30613;
+  --bg:#fff7f8;--surface:#ffffff;--text:#231f20;--muted:#6b5b5e;
+  --border:#efd6da;--ok:#dff4e5;--warn:#fff1cc;--danger:#ffd9df;
+  --shadow:0 6px 24px rgba(140,0,28,.09);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:16px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:14px 18px;box-shadow:var(--shadow)}
+.topbar h1{margin:0;font-size:1.2rem}.topbar p{margin:2px 0 0;font-size:.84rem;opacity:.86}
+.headerUser{display:flex;gap:10px;align-items:center;font-size:.9rem}
+main{max-width:1180px;margin:0 auto;padding:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.authWrap{min-height:70vh;display:grid;place-items:center}.authCard{width:min(440px,100%)}
+.tabs{position:sticky;top:78px;z-index:15;display:flex;gap:8px;overflow:auto;background:var(--bg);padding:10px 0}
+button{border:0;border-radius:12px;padding:11px 14px;font-weight:700;cursor:pointer;font:inherit}
+button.primary{background:var(--primary);color:#fff}button.secondary{background:#e8eef7;color:var(--primary)}button.danger{background:#b42318;color:#fff}
+button.full{width:100%}.tabBtn.active{background:var(--primary);color:#fff}.tabBtn{background:#e8eef7;color:var(--primary);white-space:nowrap}
+label{display:block;font-weight:650;margin:10px 0}
+input,select,textarea{width:100%;margin-top:6px;padding:11px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);font:inherit}
+textarea{min-height:96px;resize:vertical}
+.hidden{display:none!important}.muted{color:var(--muted)}.msg{min-height:18px;font-size:.9rem}
+.grid{display:grid;gap:12px}.two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.three{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{padding:12px;border-radius:12px;background:#eef4fb}.stat b{display:block;font-size:1.35rem;margin-top:4px}
+.hero{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}.hero .stat{background:rgba(255,255,255,.12)}
+.sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e8eef7;font-size:.78rem}.badge.ok{background:var(--ok)}.badge.warn{background:var(--warn)}.badge.danger{background:var(--danger)}
+.tableWrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:9px;border-bottom:1px solid #e5eaf0;text-align:left;vertical-align:top}
+.kpi{font-size:1.7rem;font-weight:800}.note{background:#eef4fb;padding:10px;border-radius:10px;font-size:.88rem}
+.actionGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.actionBtn{min-height:84px;font-size:1rem;background:var(--primary);color:#fff}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.right{margin-left:auto}
+.toast{position:fixed;right:14px;bottom:14px;background:#111827;color:#fff;padding:12px 14px;border-radius:10px;z-index:50;box-shadow:var(--shadow)}
+hr{border:0;border-top:1px solid var(--border);margin:16px 0}
+@media(max-width:640px){main{padding:10px}.tabs{top:74px}.topbar{align-items:flex-start}.headerUser{flex-direction:column;align-items:flex-end}.actionGrid{grid-template-columns:1fr 1fr}}
+
+/* V2 storico progressi - identità rosso/bianco */
+body{background:linear-gradient(180deg,#fff 0,#fff7f8 48%,#fff 100%)}
+.topbar{background:linear-gradient(135deg,var(--primary),var(--primary2))}
+.card{border-color:var(--border)}
+.hero{background:linear-gradient(135deg,var(--primary),var(--primary2))}
+.stat{background:#fff0f2;border:1px solid #f6d8dd}
+.hero .stat{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.18)}
+button.primary,.actionBtn,.tabBtn.active{background:var(--primary);color:#fff}
+button.secondary,.tabBtn{background:#fff0f2;color:var(--primary)}
+.note{background:#fff0f2}
+.redBadge{background:var(--primary);color:#fff}
+.historyToolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:14px 0 18px}
+.segmented{display:flex;gap:5px;overflow:auto;background:#fff0f2;border:1px solid var(--border);padding:4px;border-radius:12px}
+.segmented button{background:transparent;color:var(--primary);padding:9px 11px;white-space:nowrap}
+.segmented button.active{background:var(--primary);color:#fff}
+.historyGrid{margin-top:14px;border:1px solid var(--border);border-radius:12px}
+.historyGrid th{position:sticky;top:0;background:#fff0f2;color:#6f0016;z-index:2}
+.historyGrid tbody tr:hover{background:#fffafb}
+.comparisonCard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:13px;margin:14px 0;background:#fffafb;border:1px solid var(--border);border-radius:13px}
+.comparisonCard b{display:block;font-size:1.15rem;margin-top:3px}.compareArrow{font-size:1.35rem;color:var(--primary)}
+.chartPicker{max-width:340px;margin:14px 0}
+.chartCard{background:#fff;border:1px solid var(--border);border-radius:15px;padding:14px;margin:14px 0;overflow:hidden}
+.chartCard h4{margin:0;color:#6f0016}.lineChart{width:100%;height:220px;color:var(--primary);background:linear-gradient(180deg,#fff7f8,#fff);border-radius:10px}
+.chartLabels{display:flex;justify-content:space-between;color:var(--muted);font-size:.8rem;margin-top:5px}
+.chartFooter{display:flex;justify-content:flex-end;margin:-8px 6px 14px;color:#6f0016}
+.barChart{height:230px;display:flex;align-items:flex-end;gap:8px;overflow-x:auto;padding:12px 4px 0}
+.barItem{min-width:48px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.barTrack{height:155px;width:28px;background:#ffe3e7;border-radius:8px 8px 3px 3px;display:flex;align-items:flex-end;overflow:hidden}
+.barFill{width:100%;background:linear-gradient(180deg,#ef3340,var(--primary));border-radius:8px 8px 3px 3px}
+.barValue{font-size:.75rem;font-weight:750;color:#6f0016;margin-bottom:4px}.barLabel{font-size:.7rem;color:var(--muted);margin-top:4px;white-space:nowrap}
+@media(max-width:640px){.historyToolbar{display:block}.segmented{margin-bottom:8px}.historyGrid{font-size:.8rem}.chartCard{padding:10px}.lineChart{height:185px}}
+
+/* v2.1 - scale, alert, export, notifiche */
+.alertGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.alertAthlete,.alertPanel{border:1px solid var(--border);border-left:6px solid #7a7a7a;border-radius:14px;padding:14px;background:#fff}
+.alertAthlete.green,.alertPanel.green{border-left-color:#16803b;background:#f5fff8}
+.alertAthlete.orange,.alertPanel.orange{border-left-color:#e28a00;background:#fffaf0}
+.alertAthlete.red,.alertPanel.red{border-left-color:#c8102e;background:#fff4f6}
+.alertAthlete ul,.alertPanel ul{margin:8px 0 0;padding-left:20px}
+.alertAthlete li,.alertPanel li{margin:4px 0}
+.historyActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.right{margin-left:auto}
+select option{background:#fff;color:#231f20}
+@media(max-width:640px){.historyActions{width:100%;justify-content:space-between}.alertGrid{grid-template-columns:1fr}}
+
+/* V3 Performance Management */
+.innerCard{box-shadow:none;background:#fffafb}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.profileGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+.profileMetric{border:1px solid var(--border);border-radius:15px;padding:14px;background:#fff}
+.miniMetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.miniMetrics span{font-size:.78rem;color:var(--muted);background:#fff4f6;border-radius:10px;padding:9px}
+.miniMetrics b{display:block;color:var(--text);font-size:1rem;margin-top:3px}
+.reportPage{background:#fff;border:1px solid var(--border);border-radius:18px;padding:24px}
+.reportHeader{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--primary);padding-bottom:12px;margin-bottom:16px}
+.reportHeader h1{margin:0;color:var(--primary)}.reportHeader p{margin:4px 0;color:var(--muted)}
+.reportMark{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:#fff;font-weight:900;font-size:1.1rem}
+.reportComment textarea{min-height:130px}.reportGrid{align-items:start}
+@media(max-width:700px){.grid.three{grid-template-columns:1fr}.profileGrid{grid-template-columns:1fr}.miniMetrics{grid-template-columns:1fr}.reportPage{padding:14px}}
+@media print{
+ body{background:#fff!important}.topbar,.tabs,.noPrint,#toast{display:none!important}.appShell,.container,main{max-width:none!important;margin:0!important;padding:0!important}
+ .reportPage{border:0!important;box-shadow:none!important;padding:8mm!important}.reportGrid{grid-template-columns:1fr 1fr!important}
+ .chartCard,.card{break-inside:avoid}.reportComment textarea{border:0;resize:none;min-height:80px}
+}
+
+/* V3.1 - campi dinamici */
+.fullSpan{grid-column:1/-1}
+.customFieldsBlock{margin:14px 0;padding:12px;background:#fff7f8;border:1px dashed var(--border);border-radius:13px}
+.customFieldsBlock h4{margin:0 0 10px;color:var(--primary)}
+.extraPill{display:inline-block;padding:4px 7px;margin:2px;border-radius:8px;background:#fff0f2;font-size:.78rem;white-space:nowrap}
+.pillWrap{margin-top:10px}
+.reportCustomFields{margin:18px 0;padding:14px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+@media(max-width:700px){.fullSpan{grid-column:auto}}
+.phaseGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.phaseBox{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fff}.phaseBox h3{margin-top:0}.codeBadge{display:inline-block;padding:5px 10px;border-radius:999px;background:#eaf2fb;color:#0b3a6e;font-weight:800}.sessionCard{border-left:5px solid #0b3a6e}.sessionCard.forza{border-left-color:#9b1c1c}.mini{font-size:.82rem}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.danger{background:#9b1c1c!important;color:white!important}.success{background:#166534!important;color:white!important}.privacyNote{padding:10px 12px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa}.reportHero{background:linear-gradient(135deg,#0b3a6e,#174f8c);color:white}.reportHero .stat span,.reportHero .muted{color:#dbeafe}.nowrap{white-space:nowrap}@media(max-width:700px){.phaseGrid{grid-template-columns:1fr}.toolbar{display:grid;grid-template-columns:1fr}}
