@@ -109,3 +109,11 @@ select option{background:#fff;color:#231f20}
 .reportCustomFields{margin:18px 0;padding:14px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 @media(max-width:700px){.fullSpan{grid-column:auto}}
 .phaseGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.phaseBox{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fff}.phaseBox h3{margin-top:0}.codeBadge{display:inline-block;padding:5px 10px;border-radius:999px;background:#eaf2fb;color:#0b3a6e;font-weight:800}.sessionCard{border-left:5px solid #0b3a6e}.sessionCard.forza{border-left-color:#9b1c1c}.mini{font-size:.82rem}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.danger{background:#9b1c1c!important;color:white!important}.success{background:#166534!important;color:white!important}.privacyNote{padding:10px 12px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa}.reportHero{background:linear-gradient(135deg,#0b3a6e,#174f8c);color:white}.reportHero .stat span,.reportHero .muted{color:#dbeafe}.nowrap{white-space:nowrap}@media(max-width:700px){.phaseGrid{grid-template-columns:1fr}.toolbar{display:grid;grid-template-columns:1fr}}
+
+/* Partecipanti: stato e gestione owner */
+.statusActive,.statusInactive{display:inline-block;padding:.28rem .55rem;border-radius:999px;font-weight:700;font-size:.82rem}
+.statusActive{background:#e7f7ec;color:#166534}
+.statusInactive{background:#f1f3f5;color:#6b7280}
+.inactiveRow{opacity:.68}
+.participantActions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.45rem}
+button.warning{background:#fff4dd;border:1px solid #e8b04a;color:#7a4a00}
