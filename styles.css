@@ -117,3 +117,17 @@ select option{background:#fff;color:#231f20}
 .inactiveRow{opacity:.68}
 .participantActions{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.45rem}
 button.warning{background:#fff4dd;border:1px solid #e8b04a;color:#7a4a00}
+
+
+/* V3 Dashboard & editing UI */
+.dashboardHero{display:grid;grid-template-columns:minmax(220px,.8fr) 2fr;gap:18px;align-items:center;padding:22px;background:linear-gradient(135deg,#8f001c 0%,#c8102e 55%,#e83a50 100%)}
+.dashboardHero h2{font-size:2rem;margin:.15rem 0}.dashboardHero p{margin:.2rem 0;opacity:.9}.eyebrow{font-size:.72rem;letter-spacing:.14em;font-weight:900;opacity:.82}
+.protocolLine{display:flex;align-items:center;gap:8px;margin-top:18px}.protocolLine span{background:#fff0f2;color:var(--primary);font-weight:900;padding:6px 10px;border-radius:999px}.protocolLine i{height:3px;flex:1;background:#f2b8c1;border-radius:99px}
+.athleteDashGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:12px}.athleteDashCard{border:1px solid var(--border);border-radius:16px;padding:14px;background:linear-gradient(180deg,#fff,#fff9fa)}
+.athleteDashHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.athleteDashHead h3{margin:8px 0 0;font-size:1rem}.miniEdit{background:#fff0f2;color:var(--primary);padding:7px 10px;font-size:.8rem}
+.progressTrack{height:8px;background:#f5dfe3;border-radius:999px;overflow:hidden;margin:14px 0 10px}.progressFill{height:100%;background:linear-gradient(90deg,var(--primary),#ef3340);border-radius:999px}
+.athleteDashCard .miniMetrics{grid-template-columns:repeat(2,1fr);margin:0}.athleteDashCard .miniMetrics span{background:#fff;border:1px solid var(--border)}
+.sectionPill,.scoreChip,.typeChip,.phaseChip{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:.78rem;font-weight:800}.sectionPill{background:#fff0f2;color:var(--primary)}.scoreChip{background:#eaf7ef;color:#166534}.typeChip{background:#eef3f9;color:#3d4d63}.phaseChip{background:#fff0f2;color:var(--primary)}
+.rowActions{display:flex;gap:6px;flex-wrap:wrap}.rowActions button{white-space:nowrap}
+tbody tr:hover{background:#fffafb}th{color:#6f0016;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+@media(max-width:760px){.dashboardHero{grid-template-columns:1fr}.dashboardHero h2{font-size:1.55rem}.athleteDashGrid{grid-template-columns:1fr}.rowActions{flex-direction:column}.rowActions button{width:100%}}
