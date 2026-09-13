@@ -131,3 +131,13 @@ button.warning{background:#fff4dd;border:1px solid #e8b04a;color:#7a4a00}
 .rowActions{display:flex;gap:6px;flex-wrap:wrap}.rowActions button{white-space:nowrap}
 tbody tr:hover{background:#fffafb}th{color:#6f0016;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
 @media(max-width:760px){.dashboardHero{grid-template-columns:1fr}.dashboardHero h2{font-size:1.55rem}.athleteDashGrid{grid-template-columns:1fr}.rowActions{flex-direction:column}.rowActions button{width:100%}}
+
+/* V4 - Presenze settimanali + date manuali */
+.attendanceToolbar{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.attendanceToolbar label{min-width:230px;margin-left:auto}
+.attendanceBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.attendanceDay{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 6px 20px rgba(80,0,20,.04)}
+.attendanceDay.today{outline:2px solid var(--primary);outline-offset:1px}.attendanceDate{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:11px 13px;background:#fff4f6;text-transform:capitalize}.attendanceDate span{font-size:.82rem;color:var(--muted)}
+.attendanceSlot{padding:12px 13px;border-top:1px solid var(--border)}.attendanceSlotHead{display:flex;justify-content:space-between;align-items:center;gap:8px}.attendanceSlotHead button{padding:7px 10px;font-size:.78rem}
+.attendancePeople{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:26px}.attendancePerson{display:inline-flex;padding:5px 8px;border-radius:999px;background:#fff0f2;color:#6f0016;border:1px solid #f3d4da;font-size:.78rem;font-weight:750}
+input[type="date"]{min-height:42px}
+@media(max-width:760px){.attendanceBoard{grid-template-columns:1fr}.attendanceToolbar{display:grid;grid-template-columns:1fr 1fr}.attendanceToolbar label{grid-column:1/-1;min-width:0;margin-left:0}.attendanceToolbar #thisWeek{grid-column:1/-1;grid-row:1}.attendanceDate{position:sticky;top:0}}
