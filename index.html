@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
-  <script src="config.js?v=5.0"></script>
+  <script src="config.js?v=9.0"></script>
 </head>
 <body>
   <header class="topbar">
@@ -29,17 +29,29 @@
           <label>Password<input id="loginPassword" type="password" required autocomplete="current-password"></label>
           <button class="primary full" id="loginBtn" type="button">Accedi</button>
         </form>
+        <button class="secondary full" id="forgotPasswordBtn" type="button">Password dimenticata?</button>
+        <div id="recoveryRequestBox" class="hidden" style="margin-top:14px">
+          <hr>
+          <h3>Recupera password</h3>
+          <p class="muted">Inserisci la tua email. Riceverai un link che riaprirà Patruno Monitor e ti permetterà di scegliere una nuova password.</p>
+          <form id="recoveryRequestForm">
+            <label>Email<input id="recoveryEmail" type="email" required autocomplete="email"></label>
+            <button class="primary full" id="sendRecoveryBtn" type="submit">Invia link di recupero</button>
+            <button class="secondary full" id="cancelRecoveryBtn" type="button">Annulla</button>
+          </form>
+          <p id="recoveryMsg" class="msg"></p>
+        </div>
         <p id="authMsg" class="msg"></p>
       </div>
     </section>
     <section id="passwordSetupView" class="authWrap hidden">
       <div class="card authCard">
         <h2>Imposta la tua password</h2>
-        <p class="muted">Primo accesso Patruno Monitor — Tesi. Scegli una password personale per i prossimi accessi.</p>
+        <p class="muted">Scegli una nuova password personale. Deve contenere almeno 8 caratteri.</p>
         <form id="passwordSetupForm">
           <label>Nuova password<input id="newPassword" type="password" minlength="8" required autocomplete="new-password"></label>
           <label>Conferma password<input id="confirmPassword" type="password" minlength="8" required autocomplete="new-password"></label>
-          <button class="primary full" id="setPasswordBtn" type="submit">Imposta password e accedi</button>
+          <button class="primary full" id="setPasswordBtn" type="submit">Salva nuova password</button>
         </form>
         <p id="passwordMsg" class="msg"></p>
       </div>
@@ -50,6 +62,6 @@
     </section>
   </main>
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=5.0"></script>
+  <script src="app.js?v=9.0"></script>
 </body>
 </html>

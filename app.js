@@ -24,9 +24,11 @@ const isStaff=()=>staffRoles.includes(profile?.role);
 // Supabase può restituire token nell'hash oppure un code PKCE nella query.
 const initialUrl = new URL(window.location.href);
 const initialHash = new URLSearchParams(initialUrl.hash.replace(/^#/,''));
-const inviteContext = ['invite','recovery'].includes(initialHash.get('type')||initialUrl.searchParams.get('type')||'')
+const authCallbackType = initialHash.get('type') || initialUrl.searchParams.get('type') || '';
+const inviteContext = ['invite','recovery'].includes(authCallbackType)
   || initialHash.has('access_token')
-  || initialUrl.searchParams.has('code');
+  || initialUrl.searchParams.has('code')
+  || initialUrl.searchParams.get('password_recovery') === '1';
 let awaitingPasswordSetup = inviteContext;
 
 function appBaseUrl(){
@@ -43,9 +45,12 @@ function showPasswordSetup(message=''){
 function clearAuthCallbackUrl(){
   try{ history.replaceState({},document.title,appBaseUrl()); }catch(_e){}
 }
-async function finishFirstAccess(session){
+async function finishFirstAccess(session, reason=''){
   if(!session?.user) return false;
-  showPasswordSetup('Invito verificato. Scegli ora la tua password personale.');
+  const recovery = reason === 'recovery' || authCallbackType === 'recovery' || initialUrl.searchParams.get('password_recovery') === '1';
+  showPasswordSetup(recovery
+    ? 'Recupero verificato. Inserisci e conferma la tua nuova password.'
+    : 'Invito verificato. Scegli ora la tua password personale.');
   return true;
 }
 
@@ -125,6 +130,42 @@ $('#loginForm').addEventListener('submit',e=>{e.preventDefault();doLogin()});
 $('#loginBtn').addEventListener('click',e=>{e.preventDefault();doLogin()});
 showAuth(sb ? 'Collegamento Supabase configurato.' : 'Errore inizializzazione Supabase. Controlla config.js.');
 
+
+// Recupero password interamente dall'interfaccia Patruno Monitor.
+// Supabase resta il provider Auth dietro le quinte: l'utente non deve entrare nella dashboard.
+$('#forgotPasswordBtn')?.addEventListener('click',()=>{
+  const box=$('#recoveryRequestBox');
+  box?.classList.toggle('hidden');
+  const loginMail=$('#loginEmail')?.value?.trim();
+  if(loginMail && $('#recoveryEmail')) $('#recoveryEmail').value=loginMail;
+  if(!box?.classList.contains('hidden')) $('#recoveryEmail')?.focus();
+});
+$('#cancelRecoveryBtn')?.addEventListener('click',()=>{
+  $('#recoveryRequestBox')?.classList.add('hidden');
+  if($('#recoveryMsg')) $('#recoveryMsg').textContent='';
+});
+$('#recoveryRequestForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=$('#recoveryEmail')?.value?.trim();
+  const m=$('#recoveryMsg');
+  const btn=$('#sendRecoveryBtn');
+  if(!email){ if(m)m.textContent='Inserisci la tua email.'; return; }
+  if(!sb){ if(m)m.textContent='Servizio di autenticazione non disponibile.'; return; }
+  btn.disabled=true;
+  if(m)m.textContent='Invio del link di recupero…';
+  try{
+    // Il marker rende il ritorno riconoscibile anche se l'evento PASSWORD_RECOVERY
+    // avviene molto presto durante l'inizializzazione del client.
+    const redirectUrl = new URL(appBaseUrl());
+    redirectUrl.searchParams.set('password_recovery','1');
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:redirectUrl.href});
+    if(error) throw error;
+    if(m)m.textContent='Se l’indirizzo è associato a un account, riceverai una email con il link per scegliere una nuova password. Controlla anche Spam/Posta indesiderata.';
+  }catch(err){
+    if(m)m.textContent='Impossibile inviare il recupero: '+(err?.message||String(err));
+  }finally{btn.disabled=false;}
+});
+
 // Gli errori globali vengono registrati in console ma NON sovrascrivono il messaggio di login.
 window.addEventListener('error',e=>console.error('Global error',e.error||e.message,e.filename,e.lineno,e.colno));
 window.addEventListener('unhandledrejection',e=>console.error('Unhandled promise rejection',e.reason));
@@ -134,15 +175,16 @@ async function restore(){
   try{
     const {data,error}=await sb.auth.getSession();
     if(error) throw error;
-    if(data?.session?.user){ if(awaitingPasswordSetup) await finishFirstAccess(data.session); else await boot(data.session.user); }
+    if(data?.session?.user){ if(awaitingPasswordSetup) await finishFirstAccess(data.session, initialUrl.searchParams.get('password_recovery')==='1'?'recovery':''); else await boot(data.session.user); }
   }catch(e){console.error('Restore session',e)}
 }
 
 if(sb){
-  sb.auth.onAuthStateChange(async (event,session)=>{
+  sb.auth.onAuthStateChange((event,session)=>{
     if((awaitingPasswordSetup || event==='PASSWORD_RECOVERY') && session?.user){
       awaitingPasswordSetup=true;
-      await finishFirstAccess(session);
+      // Evita operazioni Supabase asincrone dentro il callback Auth.
+      setTimeout(()=>finishFirstAccess(session,event==='PASSWORD_RECOVERY'?'recovery':''),0);
     }
   });
 }
@@ -162,13 +204,10 @@ $('#passwordSetupForm')?.addEventListener('submit',async e=>{
     awaitingPasswordSetup=false;
     clearAuthCallbackUrl();
     passwordSetupView.classList.add('hidden');
-    m.textContent='Password impostata.';
-    if(data?.user) await boot(data.user);
-    else {
-      const {data:sess}=await sb.auth.getSession();
-      if(sess?.session?.user) await boot(sess.session.user);
-      else showAuth('Password impostata. Accedi con email e nuova password.');
-    }
+    try{ await sb.auth.signOut(); }catch(_e){}
+    showAuth('Password aggiornata correttamente. Ora accedi con email e nuova password.','success');
+    if($('#loginEmail') && data?.user?.email) $('#loginEmail').value=data.user.email;
+    if($('#loginPassword')) $('#loginPassword').value='';
   }catch(err){
     m.textContent='Impossibile impostare la password: '+(err?.message||String(err));
   }finally{$('#setPasswordBtn').disabled=false;}
