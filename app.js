@@ -3,9 +3,9 @@ const $=s=>document.querySelector(s);
 const authView=$('#authView'),passwordSetupView=$('#passwordSetupView'),appView=$('#appView'),view=$('#view'),tabs=$('#tabs'),headerUser=$('#headerUser');
 let currentUser=null,profile=null,participantProfile=null,activeTab='home';
 const staffRoles=['owner','researcher'];
-const staffTabs=['home','participants','attendance','wellness','training','tests','history','report','settings'];
-const participantTabs=['home','attendance','wellness','training','tests','history','report'];
-const labels={home:'Home',participants:'Partecipanti',attendance:'Presenze',wellness:'Wellness',training:'Allenamento',tests:'Test',history:'Storico',report:'Report atleta',settings:'Amministrazione'};
+const staffTabs=['home','participants','athlete','attendance','wellness','training','tests','history','report','settings'];
+const participantTabs=['home','athlete','attendance','wellness','training','tests','history','report'];
+const labels={home:'Home',participants:'Partecipanti',athlete:'Area personale',attendance:'Presenze',wellness:'Wellness',training:'Allenamento',tests:'Test',history:'Storico',report:'Report atleta',settings:'Amministrazione'};
 const phases=['T0','T1','T2'];
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const fmt=d=>d?new Date(d).toLocaleString('it-IT'):'';
@@ -176,7 +176,7 @@ $('#passwordSetupForm')?.addEventListener('submit',async e=>{
 
 setTimeout(restore,0);
 function renderTabs(){const arr=isStaff()?staffTabs:participantTabs;tabs.innerHTML=arr.map(t=>`<button class="tabBtn ${activeTab===t?'active':''}" data-tab="${t}">${labels[t]}</button>`).join('');tabs.querySelectorAll('button').forEach(b=>b.onclick=async()=>{activeTab=b.dataset.tab;renderTabs();await render()})}
-async function render(){const fn={home:renderHome,participants:renderParticipants,attendance:renderAttendance,wellness:renderWellness,training:renderTraining,tests:renderTests,history:renderHistory,report:renderReport,settings:renderSettings}[activeTab];await fn()}
+async function render(){const fn={home:renderHome,participants:renderParticipants,athlete:renderAthleteArea,attendance:renderAttendance,wellness:renderWellness,training:renderTraining,tests:renderTests,history:renderHistory,report:renderReport,settings:renderSettings}[activeTab];await fn()}
 async function getParticipants(){if(profile.role==='participant')return [participantProfile];const {data}=await sb.from('participants').select('*').eq('active',true).order('code');return data||[]}
 async function identityMap(){if(!isStaff())return{};const {data}=await sb.from('participant_identity').select('*');return Object.fromEntries((data||[]).map(x=>[x.participant_id,x]))}
 const fullName=i=>[i?.first_name,i?.last_name].filter(Boolean).join(' ').trim();
@@ -196,7 +196,7 @@ async function renderHome(){
  if(profile.role==='participant'){
    view.innerHTML=`<div class="card hero dashboardHero"><div><div class="eyebrow">PATRUNO MONITOR · TESI</div><h2>${esc(participantProfile.code)}</h2><p>Il tuo percorso di monitoraggio</p></div><div class="stats">${stat('Sedute completate',completed+'/42')}${stat('Aderenza',Math.round(completed/42*100)+'%')}${stat('Training Load',Math.round(load)+' AU')}${stat('Test registrati',(tests||[]).length)}</div></div>
    <div class="card"><h2>Stato ultimo wellness</h2>${latestW?`<div class="stats">${stat('Score',latestW.score+'/20')}${stat('Dolore',latestW.pain_present?(latestW.pain_score??'—')+'/10':'No')}${stat('Data',fmtDate(latestW.wellness_date)||fmt(latestW.recorded_at))}</div>`:'<p class="muted">Nessun wellness ancora registrato.</p>'}</div>
-   <div class="actionGrid"><button class="actionBtn" data-go="wellness">Compila wellness</button><button class="actionBtn" data-go="training">Seduta / sRPE</button><button class="actionBtn" data-go="tests">I miei test</button><button class="actionBtn" data-go="report">Il mio report</button></div>`;
+   <div class="actionGrid"><button class="actionBtn" data-go="athlete">La mia area</button><button class="actionBtn" data-go="wellness">Compila wellness</button><button class="actionBtn" data-go="training">Seduta / sRPE</button><button class="actionBtn" data-go="tests">I miei test</button><button class="actionBtn" data-go="report">Il mio report</button></div>`;
  } else {
    const ids=await identityMap();
    const today=localDateISO();
@@ -210,13 +210,60 @@ async function renderHome(){
    (logs||[]).forEach(x=>{if(byPid[x.participant_id]){byPid[x.participant_id].load+=Number(x.session_load||0);if(x.completed&&Number(x.session_templates?.session_number)<=42)byPid[x.participant_id].done++}});
    (wells||[]).forEach(x=>{if(byPid[x.participant_id]&&!byPid[x.participant_id].w)byPid[x.participant_id].w=x});
    (tests||[]).forEach(x=>{if(byPid[x.participant_id]&&x.phase==='T0')byPid[x.participant_id].t0++});
-   const cards=Object.values(byPid).map(o=>{const pct=Math.min(100,Math.round(o.done/42*100));const name=participantLabel(o.p,ids);return `<div class="athleteDashCard"><div class="athleteDashHead"><div><span class="codeBadge">${esc(o.p.code)}</span><h3>${esc(fullName(ids[o.p.id])||'Nome non inserito')}</h3></div><button class="miniEdit" data-open-participant="${o.p.id}">Modifica</button></div><div class="progressTrack"><div class="progressFill" style="width:${pct}%"></div></div><div class="miniMetrics"><span>Aderenza<b>${o.done}/42</b></span><span>TL<b>${Math.round(o.load)} AU</b></span><span>Wellness<b>${o.w?o.w.score+'/20':'—'}</b></span><span>T0 test<b>${o.t0}</b></span></div></div>`}).join('');
+   const cards=Object.values(byPid).map(o=>{const pct=Math.min(100,Math.round(o.done/42*100));const name=participantLabel(o.p,ids);return `<div class="athleteDashCard"><div class="athleteDashHead"><div><span class="codeBadge">${esc(o.p.code)}</span><h3>${esc(fullName(ids[o.p.id])||'Nome non inserito')}</h3></div><div class="rowActions"><button class="miniEdit" data-open-athlete="${o.p.id}">Area</button><button class="miniEdit" data-open-participant="${o.p.id}">Modifica</button></div></div><div class="progressTrack"><div class="progressFill" style="width:${pct}%"></div></div><div class="miniMetrics"><span>Aderenza<b>${o.done}/42</b></span><span>TL<b>${Math.round(o.load)} AU</b></span><span>Wellness<b>${o.w?o.w.score+'/20':'—'}</b></span><span>T0 test<b>${o.t0}</b></span></div></div>`}).join('');
    view.innerHTML=`<div class="card hero dashboardHero"><div><div class="eyebrow">PATRUNO MONITOR · TESI</div><h2>Dashboard di studio</h2><p>Vista operativa del campione e del protocollo</p></div><div class="stats">${stat('Partecipanti',active.length)}${stat('Wellness oggi',wellToday.length+'/'+active.length)}${stat('TL gruppo',Math.round(load)+' AU')}${stat('Test registrati',(tests||[]).length)}</div></div>
    <div class="grid two"><div class="card"><h2>Indicatori gruppo</h2><div class="stats">${stat('Sedute protocollo',completedProtocol)}${stat('TL medio/atleta',Math.round(avgTL)+' AU')}${stat('Wellness medio oggi',avgWell?avgWell.toFixed(1)+'/20':'—')}${stat('Struttura','42 + extra')}</div></div><div class="card"><h2>Disegno</h2><p><b>14 settimane · 42 sedute</b></p><p>HIIT — FORZA — HIIT</p><p>Valutazioni: <b>T0 · T1 · T2</b></p><div class="protocolLine"><span>T0</span><i></i><span>T1</span><i></i><span>T2</span></div></div></div>
    <div class="card"><div class="sectionTitle"><div><h2>Partecipanti — stato rapido</h2><p class="muted">Codice e nome sempre associati nella vista staff.</p></div></div><div class="athleteDashGrid">${cards||'<p class="muted">Nessun partecipante attivo.</p>'}</div></div>`;
+   document.querySelectorAll('[data-open-athlete]').forEach(b=>b.onclick=async()=>{sessionStorage.setItem('athleteAreaPid',b.dataset.openAthlete);activeTab='athlete';renderTabs();await renderAthleteArea()});
    document.querySelectorAll('[data-open-participant]').forEach(b=>b.onclick=async()=>{activeTab='participants';renderTabs();await renderParticipants();setTimeout(()=>document.querySelector(`[data-edit="${b.dataset.openParticipant}"]`)?.click(),0)});
  }
  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=async()=>{activeTab=b.dataset.go;renderTabs();await render()});
+}
+
+
+function svgLineChart(rows, series, opts={}){
+  if(!rows.length)return '<div class="emptyChart">Dati non ancora disponibili.</div>';
+  const W=760,H=250,L=42,R=18,T=18,B=42,pw=W-L-R,ph=H-T-B;
+  const vals=rows.flatMap(r=>series.map(q=>Number(r[q.key])).filter(Number.isFinite));
+  if(!vals.length)return '<div class="emptyChart">Dati non ancora disponibili.</div>';
+  let min=opts.min!=null?opts.min:Math.min(...vals),max=opts.max!=null?opts.max:Math.max(...vals);
+  if(min===max){min-=1;max+=1} const x=i=>L+(rows.length===1?pw/2:i*pw/(rows.length-1)); const y=v=>T+(max-v)*ph/(max-min);
+  const grid=[0,.25,.5,.75,1].map(f=>{const yy=T+ph*f,v=max-(max-min)*f;return `<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" class="chartGrid"/><text x="${L-7}" y="${yy+4}" text-anchor="end" class="chartTick">${Math.round(v*10)/10}</text>`}).join('');
+  const lines=series.map((q,si)=>{const pts=rows.map((r,i)=>Number.isFinite(Number(r[q.key]))?`${x(i)},${y(Number(r[q.key]))}`:null).filter(Boolean).join(' ');const dots=rows.map((r,i)=>Number.isFinite(Number(r[q.key]))?`<circle cx="${x(i)}" cy="${y(Number(r[q.key]))}" r="3.5" class="chartSeries s${si}"/>`:'').join('');return `<polyline points="${pts}" class="chartSeriesLine s${si}"/>${dots}`}).join('');
+  const every=Math.max(1,Math.ceil(rows.length/7));const labs=rows.map((r,i)=>(i%every===0||i===rows.length-1)?`<text x="${x(i)}" y="${H-14}" text-anchor="middle" class="chartTick">${esc(r.label)}</text>`:'').join('');
+  const legend=series.length>1?`<div class="chartLegend">${series.map((q,i)=>`<span><i class="legendDot s${i}"></i>${esc(q.label)}</span>`).join('')}</div>`:'';
+  return `<div class="analyticsChart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.title||'Grafico')}">${grid}${lines}${labs}</svg>${legend}</div>`;
+}
+
+async function renderAthleteArea(){
+ const parts=await getParticipants(),ids=await identityMap();
+ let pid=profile.role==='participant'?participantProfile.id:(sessionStorage.getItem('athleteAreaPid')||parts[0]?.id||'');
+ if(!parts.some(p=>p.id===pid))pid=parts[0]?.id||'';
+ if(!pid){view.innerHTML='<div class="card"><h2>Area personale</h2><p class="muted">Nessun partecipante disponibile.</p></div>';return}
+ const selector=profile.role==='participant'?`<div class="athleteIdentity"><span class="codeBadge">${esc(participantProfile.code)}</span><b>La mia area personale</b></div>`:`<label class="athletePicker">Partecipante<select id="athletePid">${parts.map(p=>`<option value="${p.id}" ${p.id===pid?'selected':''}>${esc(participantLabel(p,ids))}</option>`).join('')}</select></label>`;
+ view.innerHTML=`<div class="card athleteAreaTop"><div><div class="eyebrow dark">MONITORAGGIO INDIVIDUALE</div><h2>Area personale atleta</h2><p class="muted">Allenamenti, carico interno, sRPE e andamento wellness in un'unica vista.</p></div>${selector}</div><div id="athleteAreaBody"><div class="card"><p class="muted">Caricamento dati…</p></div></div>`;
+ const load=async()=>{
+   const chosen=profile.role==='participant'?participantProfile.id:$('#athletePid').value; sessionStorage.setItem('athleteAreaPid',chosen);
+   const p=parts.find(x=>x.id===chosen)||participantProfile; const label=participantLabel(p,ids);
+   const [{data:logs,error:le},{data:wells,error:we}]=await Promise.all([
+    sb.from('session_logs').select('*,session_templates(session_number,week_number,session_type,title)').eq('participant_id',chosen).order('performed_at',{ascending:true}),
+    sb.from('wellness').select('*').eq('participant_id',chosen).order('wellness_date',{ascending:true}).order('recorded_at',{ascending:true})
+   ]);
+   if(le||we){$('#athleteAreaBody').innerHTML=`<div class="card"><p class="msg">${esc((le||we).message)}</p></div>`;return}
+   const L=logs||[],W=wells||[], protocol=L.filter(x=>x.completed&&Number(x.session_templates?.session_number)<=42), extra=L.filter(x=>x.completed&&Number(x.session_templates?.session_number)>42);
+   const totalAU=L.reduce((a,x)=>a+Number(x.session_load||0),0), avgR=L.length?L.reduce((a,x)=>a+Number(x.srpe||0),0)/L.length:0, avgAU=L.length?totalAU/L.length:0, avgWell=W.length?W.reduce((a,x)=>a+Number(x.score||0),0)/W.length:0;
+   const loadRows=L.map(x=>({label:new Date(x.performed_at).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'}),au:Number(x.session_load||0)}));
+   const wellRows=W.map(x=>({label:fmtDate(x.wellness_date).slice(0,5),score:Number(x.score||0),sleep:Number(x.sleep),fatigue:Number(x.fatigue),doms:Number(x.doms),stress:Number(x.stress)}));
+   const detail=[...L].reverse().map(x=>`<tr><td>${fmt(x.performed_at)}</td><td><b>${x.session_templates?.session_number??'—'}</b></td><td>${esc(x.session_templates?.session_type||'—')}</td><td>${esc(x.actual_work||x.session_templates?.title||'—')}</td><td>${x.duration_min??'—'} min</td><td><span class="rpeChip">${x.srpe??'—'}</span></td><td><b>${Math.round(Number(x.session_load||0))} AU</b></td><td>${x.pain_post?`Sì · ${esc(x.pain_site||'')} ${x.pain_score??'—'}/10`:'No'}</td><td>${esc(x.notes||'—')}</td></tr>`).join('');
+   const rpeRows=[...L].reverse().map(x=>`<tr><td>${fmt(x.performed_at)}</td><td>Seduta ${x.session_templates?.session_number??'—'}</td><td>${x.duration_min??'—'}</td><td><b>${x.srpe??'—'}</b></td><td>${Math.round(Number(x.session_load||0))}</td></tr>`).join('');
+   $('#athleteAreaBody').innerHTML=`<div class="card athleteProfileHero"><div><span class="codeBadge">${esc(p.code)}</span><h2>${esc(profile.role==='participant'?'Il mio monitoraggio':label)}</h2></div><div class="stats">${stat('Sedute protocollo',protocol.length+'/42')}${stat('Aderenza',Math.round(protocol.length/42*100)+'%')}${stat('Carico totale',Math.round(totalAU)+' AU')}${stat('sRPE medio',L.length?avgR.toFixed(1):'—')}${stat('AU medio/seduta',L.length?Math.round(avgAU):'—')}${stat('Wellness medio',W.length?avgWell.toFixed(1)+'/20':'—')}</div></div>
+   <div class="analyticsGrid"><div class="card"><div class="sectionTitle"><div><h2>Carico di allenamento</h2><p class="muted">AU = durata × session-RPE</p></div><span class="sectionPill">${L.length} sedute</span></div>${svgLineChart(loadRows,[{key:'au',label:'AU'}],{title:'Carico AU',min:0})}</div>
+   <div class="card"><div class="sectionTitle"><div><h2>Wellness</h2><p class="muted">Andamento dello score complessivo /20</p></div><span class="sectionPill">${W.length} rilevazioni</span></div>${svgLineChart(wellRows,[{key:'score',label:'Score'}],{title:'Wellness score',min:4,max:20})}</div></div>
+   <div class="card"><div class="sectionTitle"><div><h2>Componenti wellness</h2><p class="muted">Sonno, stanchezza, DOMS e stress · scala 1–5 secondo il questionario dell'app</p></div></div>${svgLineChart(wellRows,[{key:'sleep',label:'Sonno'},{key:'fatigue',label:'Stanchezza'},{key:'doms',label:'DOMS'},{key:'stress',label:'Stress'}],{title:'Componenti wellness',min:1,max:5})}</div>
+   <div class="card"><div class="sectionTitle"><div><h2>Allenamenti svolti — dettaglio</h2><p class="muted">${protocol.length} sedute protocollo · ${extra.length} extra</p></div></div><div class="tableWrap athleteTable"><table><thead><tr><th>Data</th><th>N°</th><th>Tipo</th><th>Lavoro svolto</th><th>Durata</th><th>sRPE</th><th>AU</th><th>Dolore post</th><th>Note</th></tr></thead><tbody>${detail||'<tr><td colspan="9">Nessun allenamento registrato.</td></tr>'}</tbody></table></div></div>
+   <div class="card"><div class="sectionTitle"><div><h2>Tabella RPE / Training Load</h2><p class="muted">Lettura rapida dell'intensità interna percepita e del carico di ogni seduta.</p></div></div><div class="tableWrap"><table><thead><tr><th>Data</th><th>Seduta</th><th>Durata min</th><th>sRPE CR10</th><th>Carico AU</th></tr></thead><tbody>${rpeRows||'<tr><td colspan="5">Nessun dato disponibile.</td></tr>'}</tbody></table></div></div>`;
+ };
+ if($('#athletePid'))$('#athletePid').onchange=load; await load();
 }
 
 async function renderParticipants(){
@@ -354,13 +401,43 @@ async function renderWellness(){
 async function renderTraining(){
   const pf=await participantOptions();const ids=await identityMap();const parts=await getParticipants();const partMap=Object.fromEntries(parts.map(p=>[p.id,p]));
   const {data:sessions}=await sb.from('session_templates').select('*').order('session_number');
-  view.innerHTML=`<div class="card"><div class="sectionTitle"><div><h2>Allenamento</h2><p class="muted">Protocollo 1-42 + eventuali sedute aggiuntive.</p></div><span class="sectionPill">sRPE × durata</span></div><form id="logForm">${pf}<label>Data allenamento<input id="trainingDate" type="date" value="${localDateISO()}" max="${localDateISO()}" required></label><label>Seduta<select id="sessionId">${(sessions||[]).map(s=>`<option value="${s.id}">${s.session_number}. ${s.session_type}${s.week_number?` — settimana ${s.week_number}`:''}${s.session_number>42?' — aggiuntiva':''}</option>`).join('')}</select></label><div id="plannedBox"></div><label>Lavoro realmente svolto<textarea id="actualWork"></textarea></label><div class="grid two"><label>Durata effettiva (min)<input id="duration" type="number" step="1" required></label><label>session-RPE CR10<input id="srpe" type="number" min="0" max="10" step="0.5" required></label></div><label><input id="completed" type="checkbox" checked> Seduta completata</label><label><input id="painPost" type="checkbox"> Dolore/problema durante o dopo</label><div class="grid two"><label>Sede<input id="painPostSite"></label><label>Intensità 0-10<input id="painPostScore" type="number" min="0" max="10"></label></div><label>Note<textarea id="logNotes"></textarea></label><div class="toolbar"><button class="primary" id="logSaveBtn">Salva / aggiorna seduta</button><button type="button" class="secondary hidden" id="logCancelEdit">Annulla modifica</button></div></form></div><div id="logList"></div>`;
-  const updatePlan=()=>{const s=sessions.find(x=>x.id===$('#sessionId').value);$('#plannedBox').innerHTML=s?`<div class="card sessionCard ${s.session_type==='FORZA'?'forza':''}"><b>Programmato</b><p>${esc(s.planned_work)}</p></div>`:''};$('#sessionId').onchange=updatePlan;updatePlan();
+  view.innerHTML=`<div class="card"><div class="sectionTitle"><div><h2>Allenamento</h2><p class="muted">Ogni numero di seduta può essere registrato una sola volta per partecipante. Le sedute già completate non sono più selezionabili.</p></div><span class="sectionPill">sRPE × durata</span></div><form id="logForm">${pf}<label>Data allenamento<input id="trainingDate" type="date" value="${localDateISO()}" max="${localDateISO()}" required></label><label>Seduta<select id="sessionId"></select></label><div id="plannedBox"></div><label>Lavoro realmente svolto<textarea id="actualWork"></textarea></label><div class="grid two"><label>Durata effettiva (min)<input id="duration" type="number" step="1" required></label><label>session-RPE CR10<input id="srpe" type="number" min="0" max="10" step="0.5" required></label></div><label><input id="completed" type="checkbox" checked> Seduta completata</label><label><input id="painPost" type="checkbox"> Dolore/problema durante o dopo</label><div class="grid two"><label>Sede<input id="painPostSite"></label><label>Intensità 0-10<input id="painPostScore" type="number" min="0" max="10"></label></div><label>Note<textarea id="logNotes"></textarea></label><div class="toolbar"><button class="primary" id="logSaveBtn">Salva seduta</button><button type="button" class="secondary hidden" id="logCancelEdit">Annulla modifica</button></div></form></div><div id="logList"></div>`;
+
   let editingLogId=null;
-  $('#logForm').onsubmit=async e=>{e.preventDefault();const trainingDate=$('#trainingDate').value;if(!trainingDate||trainingDate>localDateISO())return toast('La data non può essere futura');const payload={participant_id:$('#participantId').value,session_template_id:$('#sessionId').value,completed:$('#completed').checked,duration_min:+$('#duration').value,srpe:+$('#srpe').value,actual_work:$('#actualWork').value.trim()||null,pain_post:$('#painPost').checked,pain_site:$('#painPostSite').value.trim()||null,pain_score:$('#painPost').checked?(+$('#painPostScore').value||0):null,notes:$('#logNotes').value.trim()||null,performed_at:dateAtNoonISO(trainingDate)};let error;if(editingLogId){({error}=await sb.from('session_logs').update(payload).eq('id',editingLogId));}else{({error}=await sb.from('session_logs').upsert(payload,{onConflict:'participant_id,session_template_id'}));}if(error)return toast(error.message);toast(editingLogId?'Seduta aggiornata':'Seduta salvata');await renderTraining()};
+  const sessionLabel=s=>`${s.session_number}. ${s.session_type}${s.week_number?` — settimana ${s.week_number}`:''}${s.session_number>42?' — aggiuntiva':''}`;
+  const updatePlan=()=>{const s=(sessions||[]).find(x=>x.id===$('#sessionId').value);$('#plannedBox').innerHTML=s?`<div class="card sessionCard ${s.session_type==='FORZA'?'forza':''}"><b>Programmato</b><p>${esc(s.planned_work)}</p></div>`:''};
+  const refreshAvailableSessions=async(selectedId=null)=>{
+    const pid=$('#participantId').value;
+    let used=new Set();
+    if(pid){const {data:done,error}=await sb.from('session_logs').select('session_template_id').eq('participant_id',pid);if(error)return toast(error.message);used=new Set((done||[]).map(x=>x.session_template_id));}
+    const available=(sessions||[]).filter(s=>!used.has(s.id)||s.id===selectedId);
+    $('#sessionId').innerHTML=available.length?available.map(s=>`<option value="${s.id}">${sessionLabel(s)}</option>`).join(''):'<option value="">Tutte le sedute disponibili sono già registrate</option>';
+    if(selectedId&&available.some(s=>s.id===selectedId))$('#sessionId').value=selectedId;
+    $('#logSaveBtn').disabled=!available.length;
+    updatePlan();
+  };
+  $('#sessionId').onchange=updatePlan;
+  $('#participantId')?.addEventListener('change',()=>{if(!editingLogId)refreshAvailableSessions()});
+  await refreshAvailableSessions();
+
+  $('#logForm').onsubmit=async e=>{
+    e.preventDefault();
+    const trainingDate=$('#trainingDate').value;if(!trainingDate||trainingDate>localDateISO())return toast('La data non può essere futura');
+    if(!$('#sessionId').value)return toast('Non ci sono sedute disponibili da registrare');
+    const payload={participant_id:$('#participantId').value,session_template_id:$('#sessionId').value,completed:$('#completed').checked,duration_min:+$('#duration').value,srpe:+$('#srpe').value,actual_work:$('#actualWork').value.trim()||null,pain_post:$('#painPost').checked,pain_site:$('#painPostSite').value.trim()||null,pain_score:$('#painPost').checked?(+$('#painPostScore').value||0):null,notes:$('#logNotes').value.trim()||null,performed_at:dateAtNoonISO(trainingDate)};
+    let error;
+    if(editingLogId){({error}=await sb.from('session_logs').update(payload).eq('id',editingLogId));}
+    else{({error}=await sb.from('session_logs').insert(payload));}
+    if(error){
+      if(error.code==='23505'||/duplicate|unique/i.test(error.message||''))return toast('Seduta già registrata: scegli il numero corretto. Nessun dato precedente è stato modificato.');
+      return toast(error.message);
+    }
+    toast(editingLogId?'Seduta aggiornata':'Seduta salvata');await renderTraining();
+  };
+
   let q=sb.from('session_logs').select('*,participants(code),session_templates(session_number,session_type,week_number)').order('performed_at',{ascending:false}).limit(60);if(profile.role==='participant')q=q.eq('participant_id',participantProfile.id);const {data:logs}=await q;
   $('#logList').innerHTML=`<div class="card"><h2>Ultime sedute</h2><div class="tableWrap"><table><thead><tr><th>Data</th><th>Partecipante</th><th>Seduta</th><th>Tipo</th><th>Durata</th><th>sRPE</th><th>TL</th>${profile.role==='owner'?'<th>Azioni</th>':''}</tr></thead><tbody>${(logs||[]).map(x=>{const p=partMap[x.participant_id]||{id:x.participant_id,code:x.participants?.code||''};return `<tr><td>${fmtDate((x.performed_at||'').slice(0,10))}</td><td><b>${esc(participantLabel(p,ids))}</b></td><td>${x.session_templates?.session_number||''}</td><td><span class="typeChip">${x.session_templates?.session_type||''}</span></td><td>${x.duration_min??'—'}'</td><td>${x.srpe??'—'}</td><td><b>${x.session_load?Math.round(x.session_load)+' AU':'—'}</b></td>${profile.role==='owner'?`<td><div class="rowActions"><button class="secondary miniDelete" data-edit-log="${x.id}">Modifica</button><button class="danger miniDelete" data-del-log="${x.id}">Elimina</button></div></td>`:''}</tr>`}).join('')}</tbody></table></div></div>`;
-  document.querySelectorAll('[data-edit-log]').forEach(b=>b.onclick=()=>{const row=(logs||[]).find(x=>x.id===b.dataset.editLog);if(!row)return;editingLogId=row.id;$('#participantId').value=row.participant_id;$('#trainingDate').value=(row.performed_at||'').slice(0,10)||localDateISO();$('#sessionId').value=row.session_template_id;updatePlan();$('#actualWork').value=row.actual_work||'';$('#duration').value=row.duration_min??'';$('#srpe').value=row.srpe??'';$('#completed').checked=!!row.completed;$('#painPost').checked=!!row.pain_post;$('#painPostSite').value=row.pain_site||'';$('#painPostScore').value=row.pain_score??'';$('#logNotes').value=row.notes||'';$('#logSaveBtn').textContent='Aggiorna registrazione';$('#logCancelEdit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})});
+  document.querySelectorAll('[data-edit-log]').forEach(b=>b.onclick=async()=>{const row=(logs||[]).find(x=>x.id===b.dataset.editLog);if(!row)return;editingLogId=row.id;$('#participantId').value=row.participant_id;await refreshAvailableSessions(row.session_template_id);$('#trainingDate').value=(row.performed_at||'').slice(0,10)||localDateISO();$('#sessionId').value=row.session_template_id;updatePlan();$('#actualWork').value=row.actual_work||'';$('#duration').value=row.duration_min??'';$('#srpe').value=row.srpe??'';$('#completed').checked=!!row.completed;$('#painPost').checked=!!row.pain_post;$('#painPostSite').value=row.pain_site||'';$('#painPostScore').value=row.pain_score??'';$('#logNotes').value=row.notes||'';$('#logSaveBtn').textContent='Aggiorna registrazione';$('#logSaveBtn').disabled=false;$('#logCancelEdit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})});
   $('#logCancelEdit')?.addEventListener('click',()=>renderTraining());
   document.querySelectorAll('[data-del-log]').forEach(b=>b.onclick=async()=>{if(!confirm('Eliminare questa registrazione di allenamento?'))return;const {error}=await sb.from('session_logs').delete().eq('id',b.dataset.delLog);if(error)return toast(error.message);toast('Registrazione eliminata');await renderTraining();});
 }
